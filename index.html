@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="DailyPay">
+<link rel="manifest" href="manifest.webmanifest">
+<title>DailyPay Manager — V2</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#6b7280;--primary:#4f46e5;--green:#16a34a;--red:#dc2626;--border:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:24px 18px 30px}.wrap{max-width:1100px;margin:auto}.brand{font-size:24px;font-weight:800}.sub{opacity:.85;margin-top:5px}
+main{max-width:1100px;margin:-15px auto 40px;padding:0 16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card,.section{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 5px 20px #1111}.label{color:var(--muted);font-size:13px}.value{font-size:25px;font-weight:800;margin-top:6px}.income{color:var(--green)}.expense{color:var(--red)}
+.content{display:grid;grid-template-columns:380px 1fr;gap:16px;margin-top:16px}.section{box-shadow:none}h2{font-size:18px;margin:0 0 15px}
+label{font-size:13px;color:var(--muted);display:block;margin:12px 0 6px}input,select,button{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #d1d5db;font:inherit}button{border:0;background:var(--primary);color:#fff;font-weight:700;cursor:pointer;margin-top:10px}.secondary{background:#eef2ff;color:#4338ca}.danger{background:#fee2e2;color:#991b1b}
+.paybox{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;margin-top:15px}.paybox h3{margin:0 0 5px;font-size:16px}.small{font-size:12px;color:var(--muted);line-height:1.5}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}.toolbar>*{flex:1}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--border);font-size:14px}th{color:var(--muted);font-size:12px}.delete{width:auto;padding:6px 9px;margin:0}
+.empty{text-align:center;color:var(--muted);padding:30px}.notice{margin-top:14px;padding:11px;border-radius:10px;background:#ecfeff;color:#155e75;font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.content{grid-template-columns:1fr}}@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}.card{padding:13px}.value{font-size:20px}th:nth-child(4),td:nth-child(4){display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">💳 DailyPay Manager V2</div><div class="sub">Payments, UPI aur daily money tracking — tumhare control mein.</div></div></header>
+<main>
+<section class="grid">
+<div class="card"><div class="label">Total Income</div><div class="value income" id="income">₹0</div></div>
+<div class="card"><div class="label">Total Expenses</div><div class="value expense" id="expense">₹0</div></div>
+<div class="card"><div class="label">Balance</div><div class="value" id="balance">₹0</div></div>
+<div class="card"><div class="label">Transactions</div><div class="value" id="count">0</div></div>
+</section>
+
+<section class="content">
+<div class="section">
+<h2>➕ Add Transaction</h2>
+<form id="form">
+<label>Type</label><select id="type"><option value="expense">Payment / Expense</option><option value="income">Income / Received</option></select>
+<label>Amount (₹)</label><input id="amount" type="number" min="0.01" step="0.01" placeholder="e.g. 250" required>
+<label>Category</label><select id="category"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Recharge</option><option>Salary</option><option>Other</option></select>
+<label>Note</label><input id="note" maxlength="80" placeholder="e.g. Lunch">
+<label>Date</label><input id="date" type="date" required>
+<button type="submit">Save Transaction</button>
+</form>
+
+<div class="paybox">
+<h3>📲 Pay via UPI</h3>
+<div class="small">UPI ID aur amount set karke Pay Now dabao. Phone par installed UPI app payment screen kholega. PIN/OTP website ko kabhi mat do.</div>
+<label>Receiver UPI ID</label><input id="upi" placeholder="example@upi">
+<label>Receiver Name</label><input id="pname" placeholder="Name">
+<label>Payment Amount (₹)</label><input id="pamount" type="number" min="1" step="0.01" placeholder="e.g. 500">
+<label>Purpose / Note</label><input id="pnote" maxlength="80" placeholder="e.g. Rent">
+<button id="pay">Pay Now with UPI</button>
+<div class="notice">This opens a UPI payment request. Your bank/UPI app handles PIN and final authorization.</div>
+</div>
+
+<div class="paybox">
+<h3>📥 Import Transaction CSV</h3>
+<div class="small">Agar tumhare bank/UPI app se CSV statement export hota hai, use yahan import karke records add kar sakte ho. Format: date, type, amount, category, note.</div>
+<input id="csv" type="file" accept=".csv">
+<button class="secondary" id="import">Import CSV</button>
+</div>
+
+<button class="danger" id="clear">Clear All Data</button>
+</div>
+
+<div class="section">
+<h2>📋 Payment History</h2>
+<div class="toolbar"><input id="search" placeholder="Search note/category..."><select id="filter"><option value="all">All</option><option value="expense">Expenses</option><option value="income">Income</option></select></div>
+<div style="overflow:auto"><table><thead><tr><th>Date</th><th>Category</th><th>Note</th><th>Amount</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="empty" id="empty">Abhi koi transaction add nahi kiya.</div>
+</div>
+</section>
+</main>
+
+<script>
+const KEY='dailypay_transactions_v2';
+let tx=JSON.parse(localStorage.getItem(KEY)||'[]');
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+
+function money(n){return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function save(){localStorage.setItem(KEY,JSON.stringify(tx))}
+function render(){
+ const income=tx.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount,0);
+ const expense=tx.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount,0);
+ $('income').textContent=money(income);$('expense').textContent=money(expense);
+ $('balance').textContent=money(income-expense);$('count').textContent=tx.length;
+ const q=$('search').value.toLowerCase(), f=$('filter').value;
+ const list=tx.filter(x=>(f==='all'||x.type===f)&&(`${x.category} ${x.note}`.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+ $('rows').innerHTML=list.map(x=>`<tr><td>${x.date}</td><td>${x.category}</td><td>${x.note||'-'}</td><td class="${x.type}">${x.type==='income'?'+':'-'}${money(x.amount)}</td><td><button class="delete danger" onclick="removeTx(${x.id})">✕</button></td></tr>`).join('');
+ $('empty').style.display=list.length?'none':'block';
+}
+function removeTx(id){tx=tx.filter(x=>x.id!==id);save();render()}
+
+$('form').addEventListener('submit',e=>{
+ e.preventDefault();const amount=Number($('amount').value);if(!amount)return;
+ tx.push({id:Date.now(),type:$('type').value,amount,category:$('category').value,note:$('note').value.trim(),date:$('date').value});
+ save();e.target.reset();$('date').value=new Date().toISOString().slice(0,10);render();
+});
+
+$('pay').addEventListener('click',()=>{
+ const upi=$('upi').value.trim(), name=$('pname').value.trim(), amount=$('pamount').value, note=$('pnote').value.trim();
+ if(!upi||!amount){alert('UPI ID aur amount enter karo.');return}
+ const url='upi://pay?pa='+encodeURIComponent(upi)+'&pn='+encodeURIComponent(name)+'&am='+encodeURIComponent(amount)+'&cu=INR&tn='+encodeURIComponent(note);
+ window.location.href=url;
+});
+
+$('import').addEventListener('click',()=>{
+ const file=$('csv').files[0];if(!file){alert('CSV file select karo.');return}
+ const reader=new FileReader();
+ reader.onload=()=>{
+  const lines=reader.result.split(/\r?\n/).filter(Boolean);let added=0;
+  lines.slice(1).forEach(line=>{
+   const p=line.split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+   if(p.length>=3 && !isNaN(Number(p[2]))){
+    const type=(p[1]||'expense').toLowerCase().includes('income')?'income':'expense';
+    tx.push({id:Date.now()+added,type,amount:Number(p[2]),category:p[3]||'Other',note:p[4]||'Imported',date:p[0]||new Date().toISOString().slice(0,10)});added++;
+   }
+  });save();render();alert(added+' transaction(s) imported.');
+ };reader.readAsText(file);
+});
+
+$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+$('clear').addEventListener('click',()=>{if(confirm('Saara payment data delete karna hai?')){tx=[];save();render()}});
+render();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
