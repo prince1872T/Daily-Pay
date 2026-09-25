@@ -1,0 +1,10 @@
+{
+  "name": "DailyPay Manager",
+  "short_name": "DailyPay",
+  "description": "Personal daily payment and expense manager",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait"
+}
